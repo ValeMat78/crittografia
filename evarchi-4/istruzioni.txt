@@ -1,0 +1,43 @@
+# usa AES OCB
+# dentr il file cifrato vuole PKe, nounce, tag, ctx
+# le chiavi vanno salvate in file diversi
+
+# decritto
+# preso PK dal file, estraiamo PKe dal file con DH, creaiamo il cifrario
+
+# come genero le chiavi
+# pk 128 bit, create con EdDSA 25519, usando ECC ed25519 (ECC.generate(curve='ed25519'))
+# sk 128 bit, create con EdDSA 25519, usando ECC ed25519 (ECC.generate(curve='ed25519'))
+
+# step
+# creare un certificato: 
+#   genero SK e PK del certificato con ECC
+#   SK la salvo in un file apposito come nel vecchio esercizio(attenzione: format='PEM')
+#   genero un oggetto python e lo trasfomro in json:
+#   cert = {
+#         'id':'CompitoRobol',
+#         'pubk': pk.export_key(format='PEM'),
+#         'sig':''
+#   }
+#   cert_json=json.dumps(cert)
+# valido certificato:
+#   leggo e valido il certificato (ver_sign )
+#   def ver_sig(msg, sig, pub_key): msg=id+pubk pub_key=quella che ci ha dato il prof
+    # Initialise verifying
+    # verifier = eddsa.new(pub_key, 'rfc8032')
+    # # Verify
+    # try:
+    #     verifier.verify(msg, sig)
+    # except ValueError as e:   
+    #     print(e)
+    #     raise DSSEncError('Invalid signature!') 
+
+# generare chiavi effimere PKe SKe
+    # le genero sempre con ECC generate
+# uso DH tra la SKe PK del certificato che ritorna una chiave che usero per cifrare il testo con AES OCB
+# salvo PKe, nounce, tag, ctx in un file
+
+
+prendo la sk
+dh(sk,ske)
+decripto ocb
