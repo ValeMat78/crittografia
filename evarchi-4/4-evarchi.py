@@ -94,7 +94,7 @@ def getCert():
         msg=(content[0]+content[1]).encode('utf-8')
         sig = content[2]
 
-        pubKey = importEccKey(ca_pk,1)
+        pubKey = importEccKey(ca_pk)
 
         # Initialise verifying
         verifier = eddsa.new(pubKey, 'rfc8032')
@@ -126,7 +126,7 @@ def encrypt():
     settings = {
     'subject': 'clear',
     'error': 'file import aborted.',
-    'default': 'clear.txt',
+    'default': '',
     }
     data = read_file(**settings)
 
@@ -161,26 +161,19 @@ def decrypt():
     'subject': 'encrypted',
     'error': 'file import aborted.',
     'default': 'cipher.txt',
+    'process': lambda data: checkLen(data, 143)
     }
     data = read_file(**settings)
 
-    pke = data[:112]
+    pkee = data[:112]
     nonce = data[112:127]
     tag = data[127:143]
     text = data[143:]
 
-    settings = {
-    'subject': 'secret key',
-    'error': 'file import aborted.',
-    'default': 'sk.pem',
-    }
-    sk = read_file(**settings)
+    sk = importEccKey()
+    pke = importEccKey(pkee)
 
-    sks = importEccKey(sk, 0)
-    pkee = importEccKey(pke, 1)
-
-
-    DHkey = key_agreement(static_priv=sks, static_pub=pkee, kdf=kdf)
+    DHkey = key_agreement(static_priv=sk, static_pub=pke, kdf=kdf)
 
     try:
         cipher = AES.new(DHkey, AES.MODE_OCB, nonce)
@@ -195,23 +188,33 @@ def decrypt():
     'data': plaintext,
     'subject': 'plaintext',
     'error': 'Output aborted.',
-    'default': 'cipher.txt'
+    'default': 'plain.txt'
     }
     print('data succesfully written in: '+write_file(**settings))
 
 
-def importEccKey(k,b):
-    try:
-        if b == 0:
-            pwd=getPassphrase("insert the password to get the secret key")
-            return ECC.import_key(k, pwd)
-        else:
-            return ECC.import_key(k)
-    except ValueError as e:
-        print("Error during key validation, try with another")
-        c = input('q to quit, anything else to try again: ')
-        if c.lower() == 'q':
-            raise DSSEncError("the key is not correct"+e)
+def importEccKey(k=""):
+    while True:
+        try:
+            if k == "":
+                settings = {
+                    'subject': 'secret key',
+                    'error': 'file import aborted.',
+                    'default': 'sk.pem',
+                    'process': lambda data: checkLen(data, 273)
+                }
+                k = read_file(**settings)
+                
+                pwd=getPassphrase("insert the password to get the key")
+                return ECC.import_key(k, pwd)
+            else:
+                return ECC.import_key(k)
+        except ValueError as e:
+            print("Error during key validation, retry?")
+            k=""
+            c = input('q to quit, anything else to try again: ')
+            if c.lower() == 'q':
+                raise DSSEncError("the key is not correct"+e)
 
 
 # function that write file in output as bytes
@@ -291,8 +294,8 @@ def read_file(subject, error, default='', process=lambda data: data):
 # - c_len: the minimum length the data needs to have
 # return nothing
 def checkLen(data, c_len):
-    if len(data) <= c_len:
-        message = 'Error: the ciphertext must be at least '
+    if len(data) < c_len:
+        message = 'Error: the data must be at least '
         message += str(c_len) + ' bytes long.'
         raise ReadProcessingError(message)  
     return data
