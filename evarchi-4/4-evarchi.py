@@ -113,15 +113,7 @@ def getCert():
 def kdf(x):
     return SHAKE128.new(x).read(32)
 
-# function called to manage the encryption process 
-# ask what file we want to encrypt
-# ask for the password to generate the RSA keys
-# call the function that generate the RSA keys
-# aks on which file read the public key0
-# generate a cipher object with PKCS1_OAEP
-# with the public RSA key encrypt a randomly generated session key
-# encrypt the data with AES end the sessione key
-# save in a file
+
 def encrypt():
     settings = {
     'subject': 'clear',
@@ -147,15 +139,6 @@ def encrypt():
     print('data succesfully written in: '+write_file(**settings))
 
 
-
-# function called to manage the decryption process
-# ask what file we want to decrypt
-# ask in which file it need to read the private key
-# ask for the password
-# from the encrypted file it takes the encrypted ession key,nonce, tag, end the encrypted data
-# decrypt the encrypted session key with the private RSA key
-# decrypt the data with the AES session key
-# call the function that write the result on a file
 def decrypt():
     settings = {
     'subject': 'encrypted',
@@ -180,9 +163,6 @@ def decrypt():
         plaintext = cipher.decrypt_and_verify(text,tag)
     except ValueError as e:
         raise ValueError(e)
-
-    # cipher = AES.new(DHkey, AES.MODE_OCB, nonce)
-    # plaintext = cipher.decrypt_and_verify(text,tag)
 
     settings = {
     'data': plaintext,
