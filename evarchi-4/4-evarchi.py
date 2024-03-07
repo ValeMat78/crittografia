@@ -9,6 +9,7 @@ from getpass import getpass
 import json
 from os.path import isfile
 
+
 # custom errors
 class DSSEncError(Exception):
     '''General error executing DSS Encryption script'''
@@ -17,14 +18,17 @@ class ReadProcessingError(DSSEncError):
 class WriteProcessingError(DSSEncError):
     '''Error writing data in file'''
 
+
 # chiave pubblica della CA
 ca_pk = '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAw7LeJPefPraYOphyfgQio1JsjdV1E+kdYxehGslK4Ws=\n-----END PUBLIC KEY-----'
+
 
 # function that generate and return a pair ECC of key using the elliptic curve Ed25519
 def ECCkey():
     sk = ECC.generate(curve='Ed25519')
     pk = sk.public_key() 
     return sk, pk
+
 
 # function that create a certificate that is needed to be signed by the CA
 # the function generate a pair of ECC keys, the exported secret key in pem format is going to be saved in a separate file
@@ -61,6 +65,7 @@ def gen_cert():
 
     print('now you can sign your certificate')
 
+
 # take the data in input from the getCert function
 # and from json it return an array with the check on the data
 def import_cert(data):
@@ -83,6 +88,7 @@ def import_cert(data):
         error_msg += f'{e} field not found.'
         raise ReadProcessingError(error_msg)
     return info
+
 
 def getCert():
     while True:
@@ -111,9 +117,11 @@ def getCert():
             if c.lower() == 'q':
                 raise ReadProcessingError(e)
     
+
 # function that return the hash of the data in input
 def kdf(x):
     return SHAKE128.new(x).read(32)
+
 
 def encrypt():
     settings = {
@@ -180,6 +188,7 @@ def decrypt():
     }
     print('data succesfully written in: '+write_file(**settings))
 
+
 # funtion that make and manage the import of the secret key
 # ask for the passphrase to import the key
 # parameters:
@@ -192,6 +201,7 @@ def importSEccKey(k):
     except ValueError as e:
          raise DSSEncError("the key is not correct"+e)
 
+
 # funtion that make and manage the import of the public key
 # parameters:
 # - k: a ECC public key
@@ -201,7 +211,6 @@ def importPEccKey(k):
          return ECC.import_key(k)
     except ValueError as e:
          raise DSSEncError("the key is not correct"+e)
-
 
 
 # function that write file in output as bytes
