@@ -1,7 +1,6 @@
 # import libraries
 from base64 import b64decode
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import ECC
 from Crypto.Hash import SHAKE128
 from Crypto.Signature import eddsa
@@ -17,16 +16,20 @@ class ReadProcessingError(DSSEncError):
     '''Error preprocessing data read from file'''
 class WriteProcessingError(DSSEncError):
     '''Error writing data in file'''
-    
+
 # chiave pubblica della CA
 ca_pk = '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAw7LeJPefPraYOphyfgQio1JsjdV1E+kdYxehGslK4Ws=\n-----END PUBLIC KEY-----'
 
-
+# function that generate and return a pair ECC of key using the elliptic curve Ed25519
 def ECCkey():
     sk = ECC.generate(curve='Ed25519')
     pk = sk.public_key() 
     return sk, pk
 
+# function that create a certificate that is needed to be signed by the CA
+# the function generate a pair of ECC keys, the exported secret key in pem format is going to be saved in a separate file
+# with the pk the function create a json file with the id, the public key end the space for the signature of the CA
+# the json file is going to be saved after
 def gen_cert():
     sk, pk = ECCkey()
 
@@ -58,12 +61,14 @@ def gen_cert():
 
     print('now you can sign your certificate')
 
+# take the data in input from the getCert function
+# and from json it return an array with the check on the data
 def import_cert(data):
     error_msg = 'Certificate format not valid: '
     try:
-        #decode as string and import as json
+
         cert = json.loads(data)
-        #get values to sign
+
         info = [cert['id'], cert['pubk']]
         if 'sig' in cert:
             info += [b64decode(cert['sig'])]
@@ -74,7 +79,7 @@ def import_cert(data):
         error_msg += 'invalid data.'
         raise ReadProcessingError(error_msg)
     except KeyError as e:
-        #certificate does not have 'id' or 'pubk' fields
+
         error_msg += f'{e} field not found.'
         raise ReadProcessingError(error_msg)
     return info
@@ -92,7 +97,7 @@ def getCert():
         msg=(content[0]+content[1]).encode('utf-8')
         sig = content[2]
 
-        pubKey = importEccKey(ca_pk)
+        pubKey = importPEccKey(ca_pk)
 
         # Initialise verifying
         verifier = eddsa.new(pubKey, 'rfc8032')
@@ -106,11 +111,9 @@ def getCert():
             if c.lower() == 'q':
                 raise ReadProcessingError(e)
     
-
-# This KDF has been agreed in advance
+# function that return the hash of the data in input
 def kdf(x):
     return SHAKE128.new(x).read(32)
-
 
 def encrypt():
     settings = {
@@ -151,8 +154,15 @@ def decrypt():
     tag = data[127:143]
     text = data[143:]
 
-    sk = importEccKey()
-    pke = importEccKey(pkee)
+    settings = {
+                    'subject': 'secret key',
+                    'error': 'file import aborted.',
+                    'default': 'sk.pem',
+                    'process': importSEccKey, 
+                }
+    sk = read_file(**settings)
+
+    pke = importPEccKey(pkee)
 
     DHkey = key_agreement(static_priv=sk, static_pub=pke, kdf=kdf)
 
@@ -170,29 +180,28 @@ def decrypt():
     }
     print('data succesfully written in: '+write_file(**settings))
 
+# funtion that make and manage the import of the secret key
+# ask for the passphrase to import the key
+# parameters:
+# - k: a ECC secret key
+# return the import of the key
+def importSEccKey(k):
+    try:
+        pwd=getPassphrase("insert the password to get the key")
+        return ECC.import_key(k, pwd)
+    except ValueError as e:
+         raise DSSEncError("the key is not correct"+e)
 
-def importEccKey(k=""):
-    while True:
-        try:
-            if k == "":
-                settings = {
-                    'subject': 'secret key',
-                    'error': 'file import aborted.',
-                    'default': 'sk.pem',
-                    'process': lambda data: checkLen(data, 273)
-                }
-                k = read_file(**settings)
-                
-                pwd=getPassphrase("insert the password to get the key")
-                return ECC.import_key(k, pwd)
-            else:
-                return ECC.import_key(k)
-        except ValueError as e:
-            print("Error during key validation, retry?")
-            k=""
-            c = input('q to quit, anything else to try again: ')
-            if c.lower() == 'q':
-                raise DSSEncError("the key is not correct"+e)
+# funtion that make and manage the import of the public key
+# parameters:
+# - k: a ECC public key
+# return the import of the key
+def importPEccKey(k):
+    try:
+         return ECC.import_key(k)
+    except ValueError as e:
+         raise DSSEncError("the key is not correct"+e)
+
 
 
 # function that write file in output as bytes
