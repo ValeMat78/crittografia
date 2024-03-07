@@ -17,9 +17,7 @@ class ReadProcessingError(DSSEncError):
     '''Error preprocessing data read from file'''
 class WriteProcessingError(DSSEncError):
     '''Error writing data in file'''
-class ValueError(DSSEncError):
-    '''Error ecrypting data'''
-
+    
 # chiave pubblica della CA
 ca_pk = '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAw7LeJPefPraYOphyfgQio1JsjdV1E+kdYxehGslK4Ws=\n-----END PUBLIC KEY-----'
 
