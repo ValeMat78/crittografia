@@ -19,7 +19,7 @@ class WriteProcessingError(DSSEncError):
     '''Error writing data in file'''
 
 
-# chiave pubblica della CA
+# public key of the CA
 ca_pk = '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAw7LeJPefPraYOphyfgQio1JsjdV1E+kdYxehGslK4Ws=\n-----END PUBLIC KEY-----'
 
 
@@ -89,7 +89,10 @@ def import_cert(data):
         raise ReadProcessingError(error_msg)
     return info
 
-
+# this function ask on wich file we want to read the certificate
+# from the readed file gets the values of the certificate
+# than verify and check the validity of the certificate, thanks to the public key of the CA
+# return the public key of the certificate
 def getCert():
     while True:
         settings = {
@@ -123,6 +126,13 @@ def kdf(x):
     return SHAKE128.new(x).read(32)
 
 
+# funtion that manage the encyption process
+# ask what file we want to encrypt
+# generate a ephemeral secret end public key
+# get the public key from the CA certificate
+# with the ephemeral secret key and the certifiate public key generates a diffie-hellman key
+# with the DH key encrypt the data with AES mode OCB
+# save the ciphertext in a file with the ephimeral public key, the OCB nonce and the tag
 def encrypt():
     settings = {
     'subject': 'clear',
@@ -148,6 +158,14 @@ def encrypt():
     print('data succesfully written in: '+write_file(**settings))
 
 
+# funtion that manage the decryption process
+# ask wich file we want to decrypt 
+# get the ephemeral public key, the OCB nonce, tag and ciphertext
+# ask from wich file we want to read the certificate secret key
+# import the ECC key from the secret key and the ephemeral public key
+# generate a diffie-hellman key with the certificate secret key and the ephemeral public key
+# decrypt the ciphertext with the DH key and AES mode OCB
+# save the plaintext in file
 def decrypt():
     settings = {
     'subject': 'encrypted',
