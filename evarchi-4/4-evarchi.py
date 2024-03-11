@@ -176,9 +176,18 @@ def decrypt():
     data = read_file(**settings)
 
     pkee = data[:112]
-    nonce = data[112:127]
-    tag = data[127:143]
+
+    # aspettato dal prof
+    # tag = data[112:128]#16
+    # nonce = data[128:143]#15
+    
+    # metodo mio
+    nonce = data[112:127]#15
+    tag = data[127:143]#16
+
     text = data[143:]
+    # print(tag)
+    # print(nonce)
 
     settings = {
                     'subject': 'secret key',
