@@ -175,19 +175,23 @@ def decrypt():
     }
     data = read_file(**settings)
 
-    pkee = data[:112]
+    pke = importPEccKey(data[:112])
 
     # aspettato dal prof
-    # tag = data[112:128]#16
-    # nonce = data[128:143]#15
+    data2 = data[112:]
+    nonce = data2[:15]#15
+    tag = data2[15:31]#16
+    text = data2[31:]
     
     # metodo mio
-    nonce = data[112:127]#15
-    tag = data[127:143]#16
+    # nonce = data[112:127]#15
+    # tag = data[127:143]#16
+    # text = data[143:]
 
-    text = data[143:]
-    # print(tag)
-    # print(nonce)
+    print(b'pkee: '+pke.export_key(format='PEM').encode("utf-8"))
+    print(b'nonce: '+nonce)
+    print(b'tag: '+tag)
+    print(b'text: '+text)
 
     settings = {
                     'subject': 'secret key',
@@ -197,13 +201,12 @@ def decrypt():
                 }
     sk = read_file(**settings)
 
-    pke = importPEccKey(pkee)
 
     DHkey = key_agreement(static_priv=sk, static_pub=pke, kdf=kdf)
 
     try:
         cipher = AES.new(DHkey, AES.MODE_OCB, nonce)
-        plaintext = cipher.decrypt_and_verify(text,tag)
+        plaintext = cipher.decrypt_and_verify(text, tag)
     except ValueError as e:
         raise ValueError(e)
 
