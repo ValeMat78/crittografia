@@ -177,16 +177,10 @@ def decrypt():
 
     pke = importPEccKey(data[:112])
 
-    # aspettato dal prof
     data2 = data[112:]
     nonce = data2[:15]#15
     tag = data2[15:31]#16
     text = data2[31:]
-    
-    # metodo mio
-    # nonce = data[112:127]#15
-    # tag = data[127:143]#16
-    # text = data[143:]
 
     print(b'pkee: '+pke.export_key(format='PEM').encode("utf-8"))
     print(b'nonce: '+nonce)
