@@ -123,7 +123,7 @@ def getCert():
 
 # function that return the hash of the data in input
 def kdf(x):
-    return SHAKE128.new(x).read(32)
+    return SHAKE128.new(x).read(16)
 
 
 # funtion that manage the encyption process
@@ -182,11 +182,6 @@ def decrypt():
     tag = data2[15:31]#16
     text = data2[31:]
 
-    print(b'pkee: '+pke.export_key(format='PEM').encode("utf-8"))
-    print(b'nonce: '+nonce)
-    print(b'tag: '+tag)
-    print(b'text: '+text)
-
     settings = {
                     'subject': 'secret key',
                     'error': 'file import aborted.',
@@ -198,11 +193,16 @@ def decrypt():
 
     DHkey = key_agreement(static_priv=sk, static_pub=pke, kdf=kdf)
 
+    print(b'pkee: '+DHkey)
+    print(b'nonce: '+nonce)
+    print(b'tag: '+tag)
+    print(b'text: '+text)
+
     try:
         cipher = AES.new(DHkey, AES.MODE_OCB, nonce)
         plaintext = cipher.decrypt_and_verify(text, tag)
     except ValueError as e:
-        raise ValueError(e)
+        raise DSSEncError(e)
 
     settings = {
     'data': plaintext,
