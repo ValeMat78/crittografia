@@ -193,10 +193,6 @@ def decrypt():
 
     DHkey = key_agreement(static_priv=sk, static_pub=pke, kdf=kdf)
 
-    print(b'pkee: '+DHkey)
-    print(b'nonce: '+nonce)
-    print(b'tag: '+tag)
-    print(b'text: '+text)
 
     try:
         cipher = AES.new(DHkey, AES.MODE_OCB, nonce)
