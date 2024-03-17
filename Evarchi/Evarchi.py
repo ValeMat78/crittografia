@@ -38,10 +38,13 @@ def save_and_exit(path, password, credentials):
     data = json.dumps(credentials, ensure_ascii=False).encode('utf-8')
     # proteggi 'data' utilizzando opportunamente la password
     # ricava il segreto necessario per proteggere i dati
-    salt = session_key = get_random_bytes(16)
+    salt = get_random_bytes(16)
     pas = process_pwd(password, salt)
-    cipher = AES.new(pas, AES.MODE_OCB)
-    ciphertext, tag = cipher.encrypt_and_digest(data)
+    try:
+        cipher = AES.new(pas, AES.MODE_OCB)
+        ciphertext, tag = cipher.encrypt_and_digest(data)
+    except ValueError:
+        print("coglione")
     with open(path, 'wb') as out_file:
         print()
         # salva i dati protetti nel file situato in 'path'
