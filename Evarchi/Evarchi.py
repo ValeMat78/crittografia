@@ -34,40 +34,41 @@ def load_data(path, password):
         raise IOError(f'data not valid: {str(err)}')
     return credentials
 
-# def save_and_exit(path, password, credentials):
-#     data = json.dumps(credentials, ensure_ascii=False).encode('utf-8')
-#     # proteggi 'data' utilizzando opportunamente la password
-#     # ricava il segreto necessario per proteggere i dati
-#     # # = #
-#     # # = # chiama la funzione corretta
-#     # # = # # setup della funzione che proteggere i dati
-#     # # = # # proteggi i dati
-#     with open(path, 'wb') as out_file:
-#         # salva i dati protetti nel file situato in 'path'
-#         # (salvare anche i parametri necessari per sbloccarli)
-#         out_file.write(#)
-#         out_file.write(#)
-#         out_file.write(#)
-#         out_file.write(#)
+def save_and_exit(path, password, credentials):
+    data = json.dumps(credentials, ensure_ascii=False).encode('utf-8')
+    # proteggi 'data' utilizzando opportunamente la password
+    # ricava il segreto necessario per proteggere i dati
+    salt = session_key = get_random_bytes(16)
+    pas = process_pwd(password, salt)
+    cipher = AES.new(pas, AES.MODE_OCB)
+    ciphertext, tag = cipher.encrypt_and_digest(data)
+    with open(path, 'wb') as out_file:
+        print()
+        # salva i dati protetti nel file situato in 'path'
+        # (salvare anche i parametri necessari per sbloccarli)
+        out_file.write(salt)
+        out_file.write(cipher.nonce)
+        out_file.write(tag)
+        out_file.write(ciphertext)
 
 
-# def search_and_add(query, dic):
-#     if query in dic:
-#         print('username: ', dic[query]['username'])
-#         print('password: ', dic[query]['password'])
-#     else:
-#         prompt = 'Credentials not found. Add new entry?'
-#         prompt += '\n(y to continue, anything else to cancel)\n'
-#         add = input(prompt)
-#         if add == 'y':
-#             username_n = input('Insert username: ')
-#             # leggi la password in maniera opportuna
-#             password_n = #
-#             dic[query] = {
-#                     'username': username_n,
-#                     'password': password_n
-#                     }
-#     return dic
+def search_and_add(query, dic):
+    if query in dic:
+        print('username: ', dic[query]['username'])
+        print('password: ', dic[query]['password'])
+    else:
+        prompt = 'Credentials not found. Add new entry?'
+        prompt += '\n(y to continue, anything else to cancel)\n'
+        add = input(prompt)
+        if add == 'y':
+            username_n = input('Insert username: ')
+            # leggi la password in maniera opportuna
+            password_n = getpass("insert your password: ")
+            dic[query] = {
+                    'username': username_n,
+                    'password': password_n
+                    }
+    return dic
 
 
 def log_in(username, password):
@@ -98,12 +99,11 @@ def log_in(username, password):
     while True:
         query = input(prompt)
         if query != '':
-            print()
-            # credentials = search_and_add(query, credentials)
+            credentials = search_and_add(query, credentials)
         else:
             try:
                 print('Saving data...')
-                # save_and_exit(path_file, password, credentials)
+                save_and_exit(path_file, password, credentials)
                 print('Data saved!')
             except IOError:
                 print('Error while saving, new data has not been updated!')
