@@ -40,11 +40,10 @@ def save_and_exit(path, password, credentials):
     # ricava il segreto necessario per proteggere i dati
     salt = get_random_bytes(16)
     pas = process_pwd(password, salt)
-    try:
-        cipher = AES.new(pas, AES.MODE_OCB)
-        ciphertext, tag = cipher.encrypt_and_digest(data)
-    except ValueError:
-        print("coglione")
+
+    cipher = AES.new(pas, AES.MODE_OCB)
+    ciphertext, tag = cipher.encrypt_and_digest(data)
+
     with open(path, 'wb') as out_file:
         print()
         # salva i dati protetti nel file situato in 'path'
