@@ -1,12 +1,8 @@
-# Completare e commentare opportunamente il codice seguente
-# 
-
-# importare i moduli crittografici
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import BLAKE2b
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Cipher import AES
-# importare una funzione di input
+
 from getpass import getpass
 import json
 import os.path
