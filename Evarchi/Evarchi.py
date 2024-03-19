@@ -1,39 +1,54 @@
+# import of libraries
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import BLAKE2b
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Cipher import AES
-
 from getpass import getpass
 import json
 import os.path
 
+# function that with the scrypt method return a secure password
+# used scrypt beacuse is secure and fast
+# parameters:
+# - password: the pasphrase we need to elaborate
+# - salt: random numbers
+# return the result of the scrypt function
 def process_pwd(password, salt):
-    # elabora la password in maniera opportuna
     return scrypt(password, salt, 16, N=2**20, r=8, p=1)
 
+# function that open the wanted file,
+# read the encrypted data and decrypt them with AES mode OCB
+# OCB is a standard algorithm that is fast and gives a ful protection  
+# parameter:
+# - path: the name of the file to read
+# - password: the plain password to be elaborated that is needed to decrypt the data
+# return the decrypted data as a json
 def load_data(path, password):
     with open(path, 'rb') as in_file:
 
-        # scomponi i dati letti in 4 pezzi, 3 hanno lunghezze precise
         salt = in_file.read(16)
         nonce = in_file.read(15)
         tag = in_file.read(16)
         content = in_file.read(-1)
     
-    # rendi i dati leggibili e salva il risultato in 'data'
     pas = process_pwd(password, salt)
     cipher = AES.new(pas, AES.MODE_OCB, nonce)
     data = cipher.decrypt_and_verify(content, tag)
+
     try: 
         credentials = json.loads(data.decode('utf-8'))
     except ValueError as err:
         raise IOError(f'data not valid: {str(err)}')
     return credentials
 
+# function that encrypt with AES mode OCB the plain data and save it a the file
+# parameters:
+# - path: the name of the file where to save the data
+# - password: the plain password to be elaborated that is used to encypt the data
+# - credentials: the data to enrypt
 def save_and_exit(path, password, credentials):
     data = json.dumps(credentials, ensure_ascii=False).encode('utf-8')
-    # proteggi 'data' utilizzando opportunamente la password
-    # ricava il segreto necessario per proteggere i dati
+
     salt = get_random_bytes(16)
     pas = process_pwd(password, salt)
 
@@ -41,15 +56,19 @@ def save_and_exit(path, password, credentials):
     ciphertext, tag = cipher.encrypt_and_digest(data)
 
     with open(path, 'wb') as out_file:
-        print()
-        # salva i dati protetti nel file situato in 'path'
-        # (salvare anche i parametri necessari per sbloccarli)
+
         out_file.write(salt)
         out_file.write(cipher.nonce)
         out_file.write(tag)
         out_file.write(ciphertext)
 
-
+# function that handle the reserch of the credentials and the add for new credentials
+# if the wanted credential exist print the credentials
+# if do not exist ask we want to save it as a new credential
+# parameters: 
+# - query: the id of the credentials we search
+# - dic: list of credentials where to search
+# return the new list of credentials
 def search_and_add(query, dic):
     if query in dic:
         print('username: ', dic[query]['username'])
@@ -60,7 +79,7 @@ def search_and_add(query, dic):
         add = input(prompt)
         if add == 'y':
             username_n = input('Insert username: ')
-            # leggi la password in maniera opportuna
+
             password_n = getpass("insert your password: ")
             dic[query] = {
                     'username': username_n,
@@ -108,6 +127,7 @@ def log_in(username, password):
             return
 
 #MAIN
+# ask for username and password using the method getpass that do not show the password when you are writing it
 while True:
     print('Insert username and password to load data,')
     print('leave blank and press "enter" to exit.')
