@@ -64,7 +64,7 @@ def save_and_exit(path, password, credentials):
 
 # function that handle the reserch of the credentials and the add for new credentials
 # if the wanted credential exist print the credentials
-# if do not exist ask we want to save it as a new credential
+# if do not exist ask we want to save it as a new credential asking the new username and password
 # parameters: 
 # - query: the id of the credentials we search
 # - dic: list of credentials where to search
@@ -87,9 +87,13 @@ def search_and_add(query, dic):
                     }
     return dic
 
-
+# function that derive the file name with the hash function BLAKE2b from the username
+# BLAKE2b because is the winner for the standard SHA-3 and is fast on modern CPU
+# and it work better on 64-bit platform differently from the BLAKE2s
+# if the user do not exist, the function ask we want to create a new user/file
+# than the it ask at the user what credential to show until the user leave a blank
+# than the function recall at the function to save the file
 def log_in(username, password):
-    # deriva il percorso del file associato all'utente
     h = BLAKE2b.new(data=username.encode(),digest_bits=512)
     path_file = h.hexdigest()
     if os.path.exists(path_file):
