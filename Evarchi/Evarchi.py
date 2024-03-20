@@ -88,7 +88,7 @@ def search_and_add(query, dic):
     return dic
 
 # function that derive the file name with the hash function BLAKE2b from the username
-# BLAKE2b because is the winner for the standard SHA-3 and is fast on modern CPU
+# BLAKE2b because is one of finalist for the standard SHA-3 and is fast on modern CPU
 # and it work better on 64-bit platform differently from the BLAKE2s
 # if the user do not exist, the function ask we want to create a new user/file
 # than the it ask at the user what credential to show until the user leave a blank
