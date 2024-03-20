@@ -140,6 +140,5 @@ while True:
         print('Goodbye!')
         exit()
     else:
-        # leggi la password in maniera opportuna
         password = getpass("insert your password: ")
         log_in(username, password)
